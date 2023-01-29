@@ -1,5 +1,6 @@
 from playwright.sync_api import sync_playwright
-from bs4 import BeautifulSoup
+from functions import parse_course_page
+import csv
 
 
 # main script
@@ -28,7 +29,16 @@ with sync_playwright() as p:
     # get html
     html = page.content()
 
-    # convert to bs4 object
-    soup = BeautifulSoup(html, "html.parser")
+    # parse html code to extract information about specialization courses
+    courses = parse_course_page(html)
 
+    # save data to.csv file
+    with open('specialziations.csv', 'w', encoding='UTF8', newline='') as f:
+        # create writer object
+        writer = csv.writer(f)
+
+        # iterate over rows
+        for row in courses:
+            # save line
+            writer.writerow(row)
 
