@@ -30,12 +30,23 @@ def parse_course_page(html):
         # course instructor name
         _instructor = _info.find("span", {"class": "cds-33 css-2fzscr cds-35"}).text
 
-        # review stats
-        _review_score = _info.find("p", {"class": "cds-33 css-zl0kzj cds-35"}).text
-        _reviews_stats = _info.find("p", {"class": "cds-33 css-14d8ngk cds-35"}).text
+        # some specialization courses don't have reviews
+        try:
+            # review stats
+            _review_score = _info.find("p", {"class": "cds-33 css-zl0kzj cds-35"}).text
+            _reviews_stats = _info.find("p", {"class": "cds-33 css-14d8ngk cds-35"}).text
+        except AttributeError:
+            # return empty strings
+            _review_score = ""
+            _reviews_stats = ""
 
-        # skills to gain
-        _skills = _info.find("p", {"class": "cds-33 css-5or6ht cds-35"}).text[20:]
+        # some specialization courses don't have listed skills
+        try:
+            # skills to gain
+            _skills = _info.find("p", {"class": "cds-33 css-5or6ht cds-35"}).text[20:]
+        except AttributeError:
+            # return empty strings
+            _skills = ''
 
         # course details
         _details = _info.find_all("p", {"class": "cds-33 css-14d8ngk cds-35"})[-1].text
