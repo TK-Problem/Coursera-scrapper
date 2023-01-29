@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 
 def parse_search_page(html):
     """
-    Returns list of lists with information about specialization course
+    Returns list of lists with information about specialization courses from search query
     :param html: string, raw html code from webdriver
     :return: list
     """
@@ -66,4 +66,65 @@ def parse_search_page(html):
         data.append([_course_name, _instructor, _review_score, _reviews_stats, _skills, _details, _href, _img_url])
 
     # return list of lists (each element has information about specialization course)
+    return data
+
+
+def parse_specialization_page(html, line):
+    """
+    Returns list of lists with detailed information about specialization course
+    :param html: string, raw html code from webdriver
+    :param line: list, list of strings
+    :return: list
+    """
+    # convert to bs4 object
+    soup = BeautifulSoup(html, "html.parser")
+
+    # find html element
+    _e = soup.find("title", string="Hours to complete")
+
+    # if element found save results, else return empty string
+    if _e:
+        # move 3 parent levels above
+        _e = _e.parent.parent.parent
+        # get suggested completion time
+        _suggested_t = _e.text[17:]
+    else:
+        _suggested_t = ""
+
+    # find html element
+    _e = soup.find("div", {"class": "_1fpiay2"})
+
+    # if element found save results, else return empty string
+    if _e:
+        # get number of currently enrolled students
+        _enrolled = _e.text
+    else:
+        _enrolled = ""
+
+    # find html element
+    _e = soup.find("div", {"class": "rc-ProductMetrics"})
+
+    # if element found save results, else return empty string
+    if _e:
+        # get recent views count
+        _recent_views = _e.text
+    else:
+        _recent_views = ""
+
+    # find html element
+    _e = soup.find("div", {"data-e2e": "description"})
+
+    # if element found save results, else return empty string
+    if _e:
+        # specialization description
+        _description = _e.text
+    else:
+        _description = ""
+
+    # create empty list to store output data
+    data = line.copy()
+
+    # add new information about specialization
+    data += [_enrolled, _recent_views, _suggested_t, _description]
+
     return data
