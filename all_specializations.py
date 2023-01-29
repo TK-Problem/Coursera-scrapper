@@ -20,6 +20,8 @@ with sync_playwright() as p:
     url = "https://www.coursera.org/search?index=prod_all_launched_products_term_optimization"
     # select only specializations filter
     url += "&entityTypeDescription=Specializations"
+    # filterout only english courses (reduces data size and number of reviews to scrape)
+    url += "&allLanguages=English"
 
     # click search all courses
     page.goto(url)
@@ -64,7 +66,8 @@ with sync_playwright() as p:
     print(f"{i+2} pages with specialization courses scrapped in {time.time() - start_time:.2f} secs.")
 
     # header row values
-    header_row = ["Specialization", "Instructors", "ReviewScore", "ReviewCount", "Skills", "Details", "URL", "ImgURL"]
+    header_row = ["Specialization", "SpecializationInstructors", "ReviewScore", "ReviewCount", "Skills",
+                  "Details", "S_URL", "Img_URL"]
 
     # save data to.csv file
     with open('specializations.csv', 'w', encoding='UTF8', newline='') as f:

@@ -26,11 +26,12 @@ with sync_playwright() as p:
         scraped_data_spec = next(csv_reader)
 
         # add new headings
-        scraped_data_spec += ["SuggestedTime", "Enrolled", "RecentViews", "Description"]
+        scraped_data_spec += ["SuggestedTime", "SpecializationEnrolled",
+                              "SpecializationRecentViews", "SpecializationDescription"]
         scraped_data_spec = [scraped_data_spec]
 
         # create empty list to store info about courses
-        scraped_data_courses = list()
+        scraped_data_courses = [["S_URL", "CourseNo", "Course", "CourseRatingsCount", "CourseDescription", "C_URL"]]
 
         # convert to list so that tqdm can estimate finish time
         lines = [_line for _line in csv_reader]
