@@ -23,13 +23,16 @@ with sync_playwright() as p:
         csv_reader = csv.reader(f)
 
         # skip header line and add it to new line
-        scraped_data = next(csv_reader)
+        scraped_data_spec = next(csv_reader)
 
         # add new headings
-        scraped_data += ["SuggestedTime", "Enrolled", "RecentViews", "Description"]
-        scraped_data = [scraped_data]
+        scraped_data_spec += ["SuggestedTime", "Enrolled", "RecentViews", "Description"]
+        scraped_data_spec = [scraped_data_spec]
 
-        # convert to list (so that tqdm can estimate end time)
+        # create empty list to store info about courses
+        scraped_data_courses = list()
+
+        # convert to list so that tqdm can estimate finish time
         lines = [_line for _line in csv_reader]
 
         # iterate over lines
@@ -40,29 +43,44 @@ with sync_playwright() as p:
             # visit page
             page.goto("https://www.coursera.org/"+_url)
 
-            # implicit wait 3 secs if show more button is present
-            for i in range(3):
+            # implicit wait 2 secs if show more button is present
+            for i in range(2):
+                # explicit wait
+                time.sleep(1)
                 # break loop if button is visible
                 if page.locator("text=Show More").is_visible():
                     # click show more button
                     page.click("text=Show More", delay=50)
                     break
 
-                # explicit wait
-                time.sleep(1)
-
             # get html
             html = page.content()
 
-            # parse html code and append to all data
-            scraped_data.append(parse_specialization_page(html, _line))
+            # parse html code
+            data_spec, data_courses = parse_specialization_page(html, _line)
 
-        # save data to.csv file
+            # append detailed info about specialization course
+            scraped_data_spec.append(data_spec)
+            # append info about courses
+            scraped_data_courses += data_courses
+
+        # save detailed specialization courses data to.csv file
         with open('specializations_detailed.csv', 'w', encoding='UTF8', newline='') as f:
             # create writer object
             writer = csv.writer(f)
 
             # iterate over rows
-            for row in scraped_data:
+            for row in scraped_data_spec:
                 # save line
                 writer.writerow(row)
+
+        # save scrapped courses data to.csv file
+        with open('courses.csv', 'w', encoding='UTF8', newline='') as f:
+            # create writer object
+            writer = csv.writer(f)
+
+            # iterate over rows
+            for row in scraped_data_courses:
+                # save line
+                writer.writerow(row)
+

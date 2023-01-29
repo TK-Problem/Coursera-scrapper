@@ -74,7 +74,7 @@ def parse_specialization_page(html, line):
     Returns list of lists with detailed information about specialization course
     :param html: string, raw html code from webdriver
     :param line: list, list of strings
-    :return: list
+    :return: list, list
     """
     # convert to bs4 object
     soup = BeautifulSoup(html, "html.parser")
@@ -121,10 +121,37 @@ def parse_specialization_page(html, line):
     else:
         _description = ""
 
-    # create empty list to store output data
-    data = line.copy()
-
     # add new information about specialization
-    data += [_enrolled, _recent_views, _suggested_t, _description]
+    data_spec = line + [_enrolled, _recent_views, _suggested_t, _description]
 
-    return data
+    # create empty list to store data
+    data_courses = list()
+
+    # find all courses
+    courses = soup.find_all("div", {"class": "_jyhj5r CourseItem"})
+
+    # iterate over courses elements
+    for _course in courses:
+        # get course number
+        _course_no = _course.find("span", {"class": "_1nc68rjl text-secondary d-block m-y-1"}).text
+        # get course name
+        _course_name = _course.find("h3", {"class": "headline-3-text bold m-t-1 m-b-2"}).text
+
+        # some courses might not have ratings/reviews
+        try:
+            # get number of ratings
+            _avg_ratings = _course.find("span", {"data-test": "number-star-rating"}).text
+            _ratings_counts = _course.find("span", {"data-test": "ratings-count-without-asterisks"}).text
+        except AttributeError:
+            _ratings_counts = ""
+
+        # get description
+        _description = _course.find("div", {"class": "content-inner"}).text
+
+        # get course href
+        _href = _course.find("a", {"data-e2e": "course-link"})['href']
+
+        # append list
+        data_courses.append([line[-2], _course_no, _course_name, _ratings_counts, _description, _href])
+
+    return data_spec, data_courses
