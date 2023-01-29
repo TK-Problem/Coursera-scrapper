@@ -39,6 +39,9 @@ with sync_playwright() as p:
     # parse html code to extract information about specialization courses
     courses = parse_course_page(html)
 
+    # record script start time
+    start_time = time.time()
+
     # continue clicking button while next button is not disabled (100 is arbitrary chosen number)
     for i in range(100):
         # click next button
@@ -56,15 +59,15 @@ with sync_playwright() as p:
         # get next button class name
         _class_name = page.locator("button[data-track-component=pagination_right_arrow]").get_attribute('class')
 
-        # break loop if class name changes to disabaled
+        # break loop if class name changes to disabled
         if _class_name == "label-text box arrow arrow-disabled":
             break
 
     # return message how many pages were scrapped
-    print(f"{i+2} pages with specialization courses scrapped.")
+    print(f"{i+2} pages with specialization courses scrapped in {time.time() - start_time:.2f} secs.")
 
     # save data to.csv file
-    with open('specialziations.csv', 'w', encoding='UTF8', newline='') as f:
+    with open('specializations.csv', 'w', encoding='UTF8', newline='') as f:
         # create writer object
         writer = csv.writer(f)
 
