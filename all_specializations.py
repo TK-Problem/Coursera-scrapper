@@ -1,5 +1,5 @@
 from playwright.sync_api import sync_playwright
-from functions import parse_course_page
+from functions import parse_search_page
 import time
 import csv
 
@@ -34,7 +34,7 @@ with sync_playwright() as p:
     html = page.content()
 
     # parse html code to extract information about specialization courses
-    courses = parse_course_page(html)
+    courses = parse_search_page(html)
 
     # record script start time
     start_time = time.time()
@@ -51,7 +51,7 @@ with sync_playwright() as p:
         html = page.content()
 
         # add new data
-        courses += parse_course_page(html)
+        courses += parse_search_page(html)
 
         # get next button class name
         _class_name = page.locator("button[data-track-component=pagination_right_arrow]").get_attribute('class')

@@ -4,7 +4,7 @@ Helper functions to parse html code with BeautifulSoup soup library
 from bs4 import BeautifulSoup
 
 
-def parse_course_page(html):
+def parse_search_page(html):
     """
     Returns list of lists with information about specialization course
     :param html: string, raw html code from webdriver
