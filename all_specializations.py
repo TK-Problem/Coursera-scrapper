@@ -16,13 +16,10 @@ with sync_playwright() as p:
     # click on cookie button
     page.click("button[id=onetrust-accept-btn-handler]", delay=50)
 
-    # generate search url
-    # search all products
+    # generate search url - search all products
     url = "https://www.coursera.org/search?index=prod_all_launched_products_term_optimization"
-    # select only specializations
+    # select only specializations filter
     url += "&entityTypeDescription=Specializations"
-    # select only english language
-    url += "&allLanguages=English"
 
     # click search all courses
     page.goto(url)
@@ -66,10 +63,16 @@ with sync_playwright() as p:
     # return message how many pages were scrapped
     print(f"{i+2} pages with specialization courses scrapped in {time.time() - start_time:.2f} secs.")
 
+    # header row values
+    header_row = ["Specialization", "Instructors", "ReviewScore", "ReviewCount", "Skills", "Details", "URL", "ImgURL"]
+
     # save data to.csv file
     with open('specializations.csv', 'w', encoding='UTF8', newline='') as f:
         # create writer object
         writer = csv.writer(f)
+
+        # add heading row
+        writer.writerow(header_row)
 
         # iterate over rows
         for row in courses:

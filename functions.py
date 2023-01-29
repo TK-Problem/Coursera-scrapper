@@ -36,7 +36,7 @@ def parse_course_page(html):
             _review_score = _info.find("p", {"class": "cds-33 css-zl0kzj cds-35"}).text
             _reviews_stats = _info.find("p", {"class": "cds-33 css-14d8ngk cds-35"}).text
         except AttributeError:
-            # return empty strings
+            # return empty string
             _review_score = ""
             _reviews_stats = ""
 
@@ -45,14 +45,19 @@ def parse_course_page(html):
             # skills to gain
             _skills = _info.find("p", {"class": "cds-33 css-5or6ht cds-35"}).text[20:]
         except AttributeError:
-            # return empty strings
+            # return empty string
             _skills = ''
 
         # course details
         _details = _info.find_all("p", {"class": "cds-33 css-14d8ngk cds-35"})[-1].text
 
-        # get image source
-        _img_url = _info.find("div", {"class": "css-1doy6bd"}).find("img")["src"]
+        # some specialization courses don't have image
+        try:
+            # get image source
+            _img_url = _info.find("div", {"class": "css-1doy6bd"}).find("img")["src"]
+        except KeyError:
+            # return empty string
+            _img_url = ''
 
         # get link to specialization course
         _href = _info['href']
