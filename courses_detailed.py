@@ -1,5 +1,6 @@
 from playwright.sync_api import sync_playwright
 from tqdm import tqdm
+from functions import parse_course_page
 import time
 import csv
 
@@ -26,6 +27,10 @@ with sync_playwright() as p:
 
         # convert to list so that tqdm can estimate finish time
         lines = [_line for _line in csv_reader]
+
+        # create empty list to store all detailed course data
+        _out_data = list()
+        _out_lectures = list()
 
         # iterate over lines
         for _line in tqdm(lines):
@@ -61,4 +66,31 @@ with sync_playwright() as p:
 
             # get html
             html = page.content()
+
+            # process data
+            data_week, data_lectures = parse_course_page(html, _line)
+
+            # append data
+            _out_data += data_week
+            _out_lectures += data_lectures
+
+    # save detailed week content data to.csv file
+    with open('courses_detailed.csv', 'w', encoding='UTF8', newline='') as f:
+        # create writer object
+        writer = csv.writer(f)
+
+        # iterate over rows
+        for row in _out_data:
+            # save line
+            writer.writerow(row)
+
+    # save lecture data to.csv file
+    with open('weeks_detailed.csv', 'w', encoding='UTF8', newline='') as f:
+        # create writer object
+        writer = csv.writer(f)
+
+        # iterate over rows
+        for row in _out_lectures:
+            # save line
+            writer.writerow(row)
 
