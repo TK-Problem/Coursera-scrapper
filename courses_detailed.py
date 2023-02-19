@@ -5,35 +5,46 @@ import time
 import csv
 
 
-# main script
-with sync_playwright() as p:
-    # create webdriver (for debugging use headless False)
-    browser = p.chromium.launch(headless=False, slow_mo=50)
+# read data (first one needs to run all_specializations.py script to generate courses.csv file)
+with open('courses.csv', 'r', encoding='UTF8') as f:
+    # reader object
+    csv_reader = csv.reader(f)
 
-    # create new page and visit coursera website
-    page = browser.new_page()
-    page.goto("https://www.coursera.org/")
+    # skip header line and add it to new line
+    scraped_data_courses = next(csv_reader)
 
-    # click on cookie button
-    page.click("button[id=onetrust-accept-btn-handler]", delay=50)
+    # convert to list so that tqdm can estimate finish time
+    csv_rows = [row for row in csv_reader]
 
-    # read data (first one needs to run all_specializations.py script to generate .csv file)
-    with open('courses.csv', 'r', encoding='UTF8') as f:
-        # reader object
-        csv_reader = csv.reader(f)
+# batch size
+batch_size = 50
 
-        # skip header line and add it to new line
-        scraped_data_courses = next(csv_reader)
+# read lines in batches of 300 (can be changed if needed)
+for i in range(0, len(csv_rows), batch_size):
+    # get lines
+    _rows = csv_rows[i:i+batch_size]
 
-        # convert to list so that tqdm can estimate finish time
-        lines = [_line for _line in csv_reader]
+    # create empty list to store all detailed course data
+    _out_data = list()
+    _out_lectures = list()
 
-        # create empty list to store all detailed course data
-        _out_data = list()
-        _out_lectures = list()
+    # create webdriver for each batch of rows
+    with sync_playwright() as p:
+        # create webdriver (for debugging use headless False)
+        browser = p.chromium.launch(headless=False, slow_mo=50)
+
+        # create new page and visit coursera website
+        page = browser.new_page()
+        page.goto("https://www.coursera.org/")
+
+        # click on cookie button
+        page.click("button[id=onetrust-accept-btn-handler]", delay=50)
+
+        # print status message
+        print(f"Lines from {i} to {i+batch_size} are being processed.")
 
         # iterate over lines
-        for _line in tqdm(lines):
+        for _line in tqdm(_rows):
             # get website link (ignore first dash)
             _url = _line[-1][1:]
 
@@ -74,23 +85,23 @@ with sync_playwright() as p:
             _out_data += data_week
             _out_lectures += data_lectures
 
-    # save detailed week content data to.csv file
-    with open('courses_detailed.csv', 'w', encoding='UTF8', newline='') as f:
-        # create writer object
-        writer = csv.writer(f)
+        # save/append recorded lines to .csv files (detailed week)
+        with open('courses_detailed.csv', 'a', encoding='UTF8', newline='') as f:
+            # create writer object
+            writer = csv.writer(f)
 
-        # iterate over rows
-        for row in _out_data:
-            # save line
-            writer.writerow(row)
+            # iterate over rows
+            for _row in _out_data:
+                # save line
+                writer.writerow(_row)
 
-    # save lecture data to.csv file
-    with open('weeks_detailed.csv', 'w', encoding='UTF8', newline='') as f:
-        # create writer object
-        writer = csv.writer(f)
+        # save/append lecture data to.csv file
+        with open('weeks_detailed.csv', 'a', encoding='UTF8', newline='') as f:
+            # create writer object
+            writer = csv.writer(f)
 
-        # iterate over rows
-        for row in _out_lectures:
-            # save line
-            writer.writerow(row)
+            # iterate over rows
+            for _row in _out_lectures:
+                # save line
+                writer.writerow(_row)
 
