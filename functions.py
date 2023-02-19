@@ -176,8 +176,13 @@ def parse_course_page(html, line):
 
     # iterate over week contents
     for i, _c in enumerate(week_contents):
-        # find expected udration
-        _duration = _c.find("div", {"data-test": "duration-text-section"}).text.strip()[17:]
+        # find expected duration
+        try:
+            # some pages don\t have duration provided
+            _duration = _c.find("div", {"data-test": "duration-text-section"}).text.strip()[17:]
+        except AttributeError:
+            _duration = ''
+
         # get headline and description
         _name = _c.h3.text
         _description = _c.p.text
