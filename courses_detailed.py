@@ -17,9 +17,9 @@ with open('courses.csv', 'r', encoding='UTF8') as f:
     csv_rows = [row for row in csv_reader]
 
 # batch size
-batch_size = 50
+batch_size = 100
 
-# read lines in batches of 300 (can be changed if needed)
+# read lines in batches of 100 (can be changed if needed)
 for i in range(0, len(csv_rows), batch_size):
     # get lines
     _rows = csv_rows[i:i+batch_size]
@@ -52,7 +52,7 @@ for i in range(0, len(csv_rows), batch_size):
             page.goto("https://www.coursera.org/" + _url)
 
             # implicit wait 2 secs if show more button is present
-            for i in range(2):
+            for _ in range(2):
                 # explicit wait
                 time.sleep(1)
                 # break loop if button is visible
@@ -105,3 +105,8 @@ for i in range(0, len(csv_rows), batch_size):
                 # save line
                 writer.writerow(_row)
 
+    # count remaining batches
+    _cnt = int(len(csv_rows) / batch_size) - i / batch_size - 1
+
+    # status message how many batches are left
+    print(f"{_cnt:.0f} batches left to process.")
