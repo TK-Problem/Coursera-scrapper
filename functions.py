@@ -102,16 +102,6 @@ def parse_specialization_page(html, line):
         _enrolled = ""
 
     # find html element
-    _e = soup.find("div", {"class": "rc-ProductMetrics"})
-
-    # if element found save results, else return empty string
-    if _e:
-        # get recent views count
-        _recent_views = _e.text
-    else:
-        _recent_views = ""
-
-    # find html element
     _e = soup.find("div", {"data-e2e": "description"})
 
     # if element found save results, else return empty string
@@ -122,7 +112,7 @@ def parse_specialization_page(html, line):
         _description = ""
 
     # add new information about specialization
-    data_spec = line + [_enrolled, _recent_views, _suggested_t, _description]
+    data_spec = line + [_suggested_t, _enrolled, _description]
 
     # create empty list to store data
     data_courses = list()
@@ -208,7 +198,7 @@ def parse_course_page(html, line):
                     # return empty string
                     _d = ""
 
-                # check whatever infomation text available
+                # check whatever information text available
                 try:
                     # lecture text
                     _t = _l.text
@@ -219,9 +209,9 @@ def parse_course_page(html, line):
                 # append data
                 if len(_d):
                     # add data to list
-                    data_lectures.append([line[-1], _c_type, _t[:-1*len(_d)], _d])
+                    data_lectures.append([line[-1], i+1, _c_type, _t[:-1*len(_d)], _d])
                 else:
-                    data_lectures.append([line[-1], _c_type, _t, _d])
+                    data_lectures.append([line[-1], i+1, _c_type, _t, _d])
 
         # append list
         data_week.append([line[-1], i+1, _name, _duration, _description])

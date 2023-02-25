@@ -62,6 +62,7 @@ with sync_playwright() as p:
 
             # append detailed info about specialization course
             scraped_data_spec.append(data_spec)
+
             # append info about courses
             scraped_data_courses += data_courses
 
