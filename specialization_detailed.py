@@ -26,8 +26,7 @@ with sync_playwright() as p:
         scraped_data_spec = next(csv_reader)
 
         # add new headings
-        scraped_data_spec += ["SuggestedTime", "SpecializationEnrolled",
-                              "SpecializationRecentViews", "SpecializationDescription"]
+        scraped_data_spec += ["SuggestedTime", "SpecializationEnrolled", "SpecializationDescription"]
         scraped_data_spec = [scraped_data_spec]
 
         # create empty list to store info about courses

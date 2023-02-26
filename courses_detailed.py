@@ -86,7 +86,7 @@ for i in range(0, len(csv_rows), batch_size):
             _out_lectures += data_lectures
 
         # save/append recorded lines to .csv files (detailed week)
-        with open('courses_detailed.csv', 'a', encoding='UTF8', newline='') as f:
+        with open('weeks_basic.csv', 'a', encoding='UTF8', newline='') as f:
             # create writer object
             writer = csv.writer(f)
 
