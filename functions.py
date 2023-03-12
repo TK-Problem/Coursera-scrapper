@@ -101,18 +101,40 @@ def parse_specialization_page(html, line):
     else:
         _enrolled = ""
 
-    # find html element
-    _e = soup.find("div", {"data-e2e": "description"})
+    # get specialization review count
+    _e = soup.find('div', {"class": 'rc-TogglableContent'})
 
-    # if element found save results, else return empty string
+    # check if element was found/is present
     if _e:
-        # specialization description
-        _description = _e.text
+        # get number of rating
+        _ratings_cnt = _e.text
     else:
-        _description = ""
+        _ratings_cnt = ""
+
+    # get scores
+    _e = soup.find('span', {"data-test": 'number-star-rating'})
+
+    # get specialization review count
+    if _e:
+        _ratings_score = _e.text
+    else:
+        _ratings_score = ''
+
+    # select html element for description
+    _e = soup.find("div", {"class": "cds-71 css-0 cds-73 cds-grid-item cds-118 cds-140"})
+
+    # if element doesn't have text attribute select different section
+    try:
+        _description = _e.text
+    except AttributeError:
+        _e = soup.find("div", {"class": "description"})
+        try:
+            _description = _e.text
+        except AttributeError:
+            _description = ''
 
     # add new information about specialization
-    data_spec = line + [_suggested_t, _enrolled, _description]
+    data_spec = line + [_suggested_t, _enrolled, _ratings_cnt, _ratings_score, _description]
 
     # create empty list to store data
     data_courses = list()
@@ -123,7 +145,8 @@ def parse_specialization_page(html, line):
     # iterate over courses elements
     for _course in courses:
         # get course number
-        _course_no = _course.find("span", {"class": "_1nc68rjl text-secondary d-block m-y-1"}).text
+        _course_no = _course.strong.parent.span.text
+
         # get course name
         _course_name = _course.find("h3", {"class": "headline-3-text bold m-t-1 m-b-2"}).text
 
