@@ -89,27 +89,25 @@ def parse_specialization_page(html, line):
         # get suggested completion time
         _suggested_t = _e.text[17:]
     else:
-        _suggested_t = ""
+        _e = soup.find_all("div", {"class": "css-oj3vzs"})
+        try:
+            _suggested_t = _e[1].parent.text
+        except AttributeError:
+            _suggested_t = ''
 
     # find html element
     _e = soup.find("div", {"class": "_1fpiay2"})
 
     # if element found save results, else return empty string
-    if _e:
+    try:
         # get number of currently enrolled students
         _enrolled = _e.text
-    else:
-        _enrolled = ""
-
-    # get specialization review count
-    _e = soup.find('div', {"class": 'rc-TogglableContent'})
-
-    # check if element was found/is present
-    if _e:
-        # get number of rating
-        _ratings_cnt = _e.text
-    else:
-        _ratings_cnt = ""
+    except AttributeError:
+        _e = soup.find_all("div", {"class": "css-oj3vzs"})
+        try:
+            _enrolled = _e[0].text.split("ratings ")[1]
+        except AttributeError:
+            _enrolled = ''
 
     # get scores
     _e = soup.find('span', {"data-test": 'number-star-rating'})
@@ -127,14 +125,16 @@ def parse_specialization_page(html, line):
     try:
         _description = _e.text
     except AttributeError:
-        _e = soup.find("div", {"class": "description"})
+        _e = soup.find_all("div", {"class": "rc-TogglableContent"})
         try:
-            _description = _e.text
+            _description = _e[0].text
         except AttributeError:
+            _description = ''
+        except IndexError:
             _description = ''
 
     # add new information about specialization
-    data_spec = line + [_suggested_t, _enrolled, _ratings_cnt, _ratings_score, _description]
+    data_spec = line + [_suggested_t, _enrolled, _ratings_score, _description]
 
     # create empty list to store data
     data_courses = list()
