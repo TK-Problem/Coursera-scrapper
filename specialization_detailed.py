@@ -23,11 +23,11 @@ with sync_playwright() as p:
         csv_reader = csv.reader(f)
 
         # skip header line and add it to new line
-        scraped_data_spec = next(csv_reader)
+        scraped_data_spec = [next(csv_reader)[-2]]
 
         # add new headings
-        scraped_data_spec += ["SuggestedTime", "SpecializationEnrolled", "SpecializationRatings",
-                              "SpecializationScore", "SpecializationDescription"]
+        scraped_data_spec += ["Level", "SuggestedTime", "ReviewCount", "Rating",
+                              "SpecializationEnrolled", "SpecializationDescription"]
         scraped_data_spec = [scraped_data_spec]
 
         # create empty list to store info about courses
@@ -45,7 +45,7 @@ with sync_playwright() as p:
             page.goto("https://www.coursera.org/"+_url)
 
             # implicit wait 2 secs if show more button is present
-            for i in range(2):
+            for _ in range(2):
                 # explicit wait
                 time.sleep(1)
                 # break loop if button is visible
@@ -58,7 +58,7 @@ with sync_playwright() as p:
             html = page.content()
 
             # parse html code
-            data_spec, data_courses = parse_specialization_page(html, _line)
+            data_spec, data_courses = parse_specialization_page(html, [_line[-2]])
 
             # append detailed info about specialization course
             scraped_data_spec.append(data_spec)
@@ -67,9 +67,9 @@ with sync_playwright() as p:
             scraped_data_courses += data_courses
 
         # save detailed specialization courses data to.csv file
-        with open('specializations_detailed.csv', 'w', encoding='UTF8', newline='') as f:
+        with open('specializations_detailed.csv', 'w', encoding='UTF8', newline='') as f1:
             # create writer object
-            writer = csv.writer(f)
+            writer = csv.writer(f1)
 
             # iterate over rows
             for row in scraped_data_spec:
@@ -77,12 +77,11 @@ with sync_playwright() as p:
                 writer.writerow(row)
 
         # save scrapped courses data to.csv file
-        with open('courses.csv', 'w', encoding='UTF8', newline='') as f:
+        with open('courses.csv', 'w', encoding='UTF8', newline='') as f2:
             # create writer object
-            writer = csv.writer(f)
+            writer = csv.writer(f2)
 
             # iterate over rows
             for row in scraped_data_courses:
                 # save line
                 writer.writerow(row)
-

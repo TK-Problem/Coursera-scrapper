@@ -85,93 +85,87 @@ def parse_specialization_page(html, line):
     # convert to bs4 object
     soup = BeautifulSoup(html, "html.parser")
 
-    # find html element
-    _e = soup.find("title", string="Hours to complete")
+    # course info
+    _info = soup.find_all("section", {"class": "css-3nq2m6"})
 
-    # if element found save results, else return empty string
-    if _e:
-        # move 3 parent levels above
-        _e = _e.parent.parent.parent
+    # check if information is available (element is found)
+    if _info:
+        # find basic info
+        _spec_info = _info[0].find_all("div", {"class": "cds-119 css-h1jogs cds-121"})
+
+        # generate stock info
+        _level = ""
+        _suggested_t = ""
+        _ratings_score = ""
+        if "." in _spec_info[0].text:
+            _ratings_score = _spec_info[0].text
+
+        for _ in _spec_info:
+            _text = _.text
+            if "level" in _text:
+                _level = _text
+            elif "week" in _text:
+                _suggested_t = _text
+
         # get suggested completion time
-        _suggested_t = _e.text[17:]
+        _reviews = _info[0].find_all("p", {"class": "cds-119 css-dmxkm1 cds-121"})
+        if _reviews:
+            _reviews = _reviews[0].text
+        else:
+            _reviews = ""
     else:
-        _e = soup.find_all("div", {"class": "css-oj3vzs"})
-        try:
-            _suggested_t = _e[1].parent.text
-        except AttributeError:
-            _suggested_t = ''
+        # because this element is not found, no information can be retried for the following variables
+        _level = ""
+        _suggested_t = ""
+        _reviews = ""
+        _ratings_score = ""
 
-    # find html element
-    _e = soup.find("div", {"class": "_1fpiay2"})
+    # get number on enrolled students
+    _enrolled = ""
+    for _e in soup.find_all("p", {"class": "cds-119 css-80vnnb cds-121"}):
+        if "enrolled" in _e.text:
+            _enrolled = _e.text
 
-    # if element found save results, else return empty string
-    try:
-        # get number of currently enrolled students
-        _enrolled = _e.text
-    except AttributeError:
-        _e = soup.find_all("div", {"class": "css-oj3vzs"})
-        try:
-            _enrolled = _e[0].text.split("ratings ")[1]
-        except AttributeError:
-            _enrolled = ''
-
-    # get scores
-    _e = soup.find('span', {"data-test": 'number-star-rating'})
-
-    # get specialization review count
-    if _e:
-        _ratings_score = _e.text
+    # get other info
+    _description = soup.find_all("div", {"class": "cds-9 css-0 cds-11 cds-grid-item cds-56 cds-79 cds-94"})
+    if _description:
+        _description = _description[0].text
     else:
-        _ratings_score = ''
-
-    # select html element for description
-    _e = soup.find("div", {"class": "cds-71 css-0 cds-73 cds-grid-item cds-118 cds-140"})
-
-    # if element doesn't have text attribute select different section
-    try:
-        _description = _e.text
-    except AttributeError:
-        _e = soup.find_all("div", {"class": "rc-TogglableContent"})
-        try:
-            _description = _e[0].text
-        except AttributeError:
-            _description = ''
-        except IndexError:
-            _description = ''
+        _description = ""
 
     # add new information about specialization
-    data_spec = line + [_suggested_t, _enrolled, _ratings_score, _description]
+    data_spec = line + [_level, _suggested_t, _reviews, _ratings_score, _enrolled, _description]
 
     # create empty list to store data
     data_courses = list()
 
-    # find all courses
-    courses = soup.find_all("div", {"class": "_jyhj5r CourseItem"})
-
-    # iterate over courses elements
-    for _course in courses:
-        # get course number
-        _course_no = _course.strong.parent.span.text
-
-        # get course name
-        _course_name = _course.find("h3", {"class": "headline-3-text bold m-t-1 m-b-2"}).text
-
-        # some courses might not have ratings/reviews
-        try:
-            # get number of ratings
-            _avg_ratings = _course.find("span", {"data-test": "number-star-rating"}).text
-            _ratings_counts = _course.find("span", {"data-test": "ratings-count-without-asterisks"}).text
-        except AttributeError:
-            _ratings_counts = ""
-
-        # get description
-        _description = _course.find("div", {"class": "content-inner"}).text
-
-        # get course href
-        _href = _course.find("a", {"data-e2e": "course-link"})['href']
-
-        # append list
-        data_courses.append([line[-2], _course_no, _course_name, _ratings_counts, _description, _href])
+    # # find all courses
+    # courses = soup.find_all("div", {"class": "_jyhj5r CourseItem"})
+    #
+    # # iterate over courses elements
+    # for _course in courses:
+    #     # get course number
+    #     _course_no = _course.strong.parent.span.text
+    #
+    #     # get course name
+    #     _course_name = _course.find("h3", {"class": "headline-3-text bold m-t-1 m-b-2"}).text
+    #
+    #     # some courses might not have ratings/reviews
+    #     try:
+    #         # get number of ratings
+    #         _avg_ratings = _course.find("span", {"data-test": "number-star-rating"}).text
+    #         _ratings_counts = _course.find("span", {"data-test": "ratings-count-without-asterisks"}).text
+    #     except AttributeError:
+    #         _ratings_counts = ""
+    #
+    #     # get description
+    #     _description = _course.find("div", {"class": "content-inner"}).text
+    #
+    #     # get course href
+    #     _href = _course.find("a", {"data-e2e": "course-link"})['href']
+    #
+    #     # append list
+    #     data_courses.append([line[-2], _course_no, _course_name, _ratings_counts, _description, _href])
 
     return data_spec, data_courses
 

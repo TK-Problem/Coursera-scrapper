@@ -71,7 +71,7 @@ with sync_playwright() as p:
 # header row values
 header_row = ["SpecializationName", "SpecializationInstructors",
               "ReviewCount", "Stars", "Course_type",
-              "URL", "DescriptionLong"]
+              "SpecializationURL", "DescriptionLong"]
 
 # save data to.csv file
 with open('specializations.csv', 'w', encoding='UTF8', newline='') as f:
