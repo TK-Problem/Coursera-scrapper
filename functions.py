@@ -2,6 +2,7 @@
 Helper functions to parse html code with BeautifulSoup soup library
 """
 from bs4 import BeautifulSoup
+import re
 
 
 def parse_search_page(html):
@@ -14,7 +15,7 @@ def parse_search_page(html):
     soup = BeautifulSoup(html, "html.parser")
 
     # find all courses in page
-    courses = soup.find_all("li", {"class": "cds-71 css-0 cds-73 cds-grid-item cds-118 cds-126 cds-138"})
+    courses = soup.find_all("li", {"class": "cds-9 css-0 cds-11 cds-grid-item cds-56 cds-64 cds-76"})
 
     # create empty list to store output data
     data = list()
@@ -24,46 +25,51 @@ def parse_search_page(html):
         # get main element
         _info = _course.find('a')
 
-        # get course name
-        _course_name = _info.find("h2", {"class": "cds-33 css-bku0rr cds-35"}).text
+        # get course description
+        _description = _info['aria-label']
 
-        # course instructor name
-        _instructor = _info.find("span", {"class": "cds-33 css-2fzscr cds-35"}).text
-
-        # some specialization courses don't have reviews
-        try:
-            # review stats
-            _review_score = _info.find("p", {"class": "cds-33 css-zl0kzj cds-35"}).text
-            _reviews_stats = _info.find("p", {"class": "cds-33 css-14d8ngk cds-35"}).text
-        except AttributeError:
-            # return empty string
-            _review_score = ""
-            _reviews_stats = ""
-
-        # some specialization courses don't have listed skills
-        try:
-            # skills to gain
-            _skills = _info.find("p", {"class": "cds-33 css-5or6ht cds-35"}).text[20:]
-        except AttributeError:
-            # return empty string
-            _skills = ''
-
-        # course details
-        _details = _info.find_all("p", {"class": "cds-33 css-14d8ngk cds-35"})[-1].text
-
-        # some specialization courses don't have image
-        try:
-            # get image source
-            _img_url = _info.find("div", {"class": "css-1doy6bd"}).find("img")["src"]
-        except KeyError:
-            # return empty string
-            _img_url = ''
-
-        # get link to specialization course
+        # get link to specialization course/professional certificate
         _href = _info['href']
 
+        """
+        extract important data
+        """
+        # course type, either "professional-certificates" or "specializations"
+        _course_type = _href.split("/")[1]
+        # course name
+        _by_idx = _description.index(" by")
+        _course_name = _description[:_by_idx]
+
+        # find course instructor name
+        _instructor = re.search(r'by\s(.*?),', _description)
+        if _instructor:
+            _instructor = _instructor.group(1)
+        else:
+            _instructor = ""
+
+        # count review stars
+        _stars = re.findall(r'(\d+\.\d+\s*stars)', _description)
+        if _stars:
+            _stars = _stars[0]
+        else:
+            _stars = ""
+
+        # get number of reviews
+        _reviews = re.search(r'by\s([\d\.]+)([kM]?)\s*reviews', _description)
+        if _reviews:
+            number_part = _reviews.group(1)
+            multiplier = _reviews.group(2)
+            if multiplier == 'k':
+                _reviews = int(float(number_part) * 1_000)
+            elif multiplier == 'M':
+                _reviews = int(float(number_part) * 1_000_000)
+            else:
+                _reviews = int(number_part)
+        else:
+            _reviews = ""
+
         # append list
-        data.append([_course_name, _instructor, _review_score, _reviews_stats, _skills, _details, _href, _img_url])
+        data.append([_course_name, _instructor, _reviews, _stars, _course_type, _href, _description])
 
     # return list of lists (each element has information about specialization course)
     return data

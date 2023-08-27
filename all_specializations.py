@@ -60,16 +60,18 @@ with sync_playwright() as p:
         # get next button class name
         _class_name = page.locator("button[data-track-component=pagination_right_arrow]").get_attribute('class')
 
-        # break loop if class name changes to disabled
+        # break loop if class name changes to disabled, i.e. no more pages available
         if _class_name == "label-text box arrow arrow-disabled":
             break
 
     # return message how many pages were scrapped
-    print(f"{i+2} pages with specialization courses scrapped in {time.time() - start_time:.2f} secs.")
+    msg = f"{i+1} pages with specialization courses and professional certificates scrapped in "
+    print(msg + f"{time.time() - start_time:.2f} secs.")
 
 # header row values
-header_row = ["Specialization", "SpecializationInstructors", "ReviewScore", "ReviewCount", "Skills",
-              "Details", "S_URL", "Img_URL"]
+header_row = ["SpecializationName", "SpecializationInstructors",
+              "ReviewCount", "Stars", "Course_type",
+              "URL", "DescriptionLong"]
 
 # save data to.csv file
 with open('specializations.csv', 'w', encoding='UTF8', newline='') as f:
