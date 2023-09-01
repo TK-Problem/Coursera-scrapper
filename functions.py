@@ -85,6 +85,10 @@ def parse_specialization_page(html, line):
     # convert to bs4 object
     soup = BeautifulSoup(html, "html.parser")
 
+    """
+    specializations_detailed.csv section
+    """
+
     # course info
     _info = soup.find_all("section", {"class": "css-3nq2m6"})
 
@@ -136,36 +140,41 @@ def parse_specialization_page(html, line):
     # add new information about specialization
     data_spec = line + [_level, _suggested_t, _reviews, _ratings_score, _enrolled, _description]
 
-    # create empty list to store data
+    """
+    courses.csv section
+    """
+
+    # find all courses
+    courses = soup.find_all("button", {"class": "cds-149 cds-button-disableElevation css-of9un"})
+
+    # create empty list to store all data about courses
     data_courses = list()
 
-    # # find all courses
-    # courses = soup.find_all("div", {"class": "_jyhj5r CourseItem"})
-    #
-    # # iterate over courses elements
-    # for _course in courses:
-    #     # get course number
-    #     _course_no = _course.strong.parent.span.text
-    #
-    #     # get course name
-    #     _course_name = _course.find("h3", {"class": "headline-3-text bold m-t-1 m-b-2"}).text
-    #
-    #     # some courses might not have ratings/reviews
-    #     try:
-    #         # get number of ratings
-    #         _avg_ratings = _course.find("span", {"data-test": "number-star-rating"}).text
-    #         _ratings_counts = _course.find("span", {"data-test": "ratings-count-without-asterisks"}).text
-    #     except AttributeError:
-    #         _ratings_counts = ""
-    #
-    #     # get description
-    #     _description = _course.find("div", {"class": "content-inner"}).text
-    #
-    #     # get course href
-    #     _href = _course.find("a", {"data-e2e": "course-link"})['href']
-    #
-    #     # append list
-    #     data_courses.append([line[-2], _course_no, _course_name, _ratings_counts, _description, _href])
+    for _course in courses:
+        # get contents
+        _contents = _course.parent
+
+        # get information
+        _course_name = _contents.h3.text
+        _course_html = _contents.a['href']
+
+        # get additional info
+        _info = _contents.find("div", {'class': 'cds-119 css-mc13jp cds-121'}).find_all('span')
+        _course_no = _info[0].text
+        if len(_info) > 2:
+            _course_time = _info[2].text
+        else:
+            _course_time = ""
+
+        if len(_info) > 5:
+            _course_score = _info[-3].text
+            _course_review_cnt = _info[-1].text
+        else:
+            _course_score = ""
+            _course_review_cnt = ""
+
+        # add information about courses
+        data_courses.append(line + [_course_html, _course_name, _course_no, _course_time, _course_score, _course_review_cnt])
 
     return data_spec, data_courses
 
