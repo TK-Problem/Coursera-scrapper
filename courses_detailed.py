@@ -1,7 +1,6 @@
 from playwright.sync_api import sync_playwright
 from tqdm import tqdm
 from functions import parse_course_page
-import time
 import csv
 
 
@@ -28,10 +27,13 @@ for i in range(0, len(csv_rows), BATCH_SIZE):
     if i > 0:
         data_week = list()
         data_lectures = list()
+        data_course_detailed = list()
     else:
         # write header rows
         data_week = [["CourseURL", "ModuleNo", "ModuleName", "Time2Complete", "ContentsSummary"]]
         data_lectures = [["CourseURL", "ModuleNo", "Type", "LectureName"]]
+        data_course_detailed = [["CourseURL", "CourseLevel", "Time2Complete",
+                                 "ReviewsCnt", "RatingScore", "Enrolled", "CourseDescription"]]
 
     # create webdriver for each batch of rows
     with sync_playwright() as p:
@@ -65,6 +67,7 @@ for i in range(0, len(csv_rows), BATCH_SIZE):
             # append data
             data_week += _data_week
             data_lectures += _data_lectures
+            data_course_detailed.append(_data_course_detailed)
 
     # save/append recorded lines to .csv files (detailed week)
     with open('weeks.csv', 'a', encoding='UTF8', newline='') as f:
@@ -83,6 +86,16 @@ for i in range(0, len(csv_rows), BATCH_SIZE):
 
         # iterate over rows
         for _row in data_lectures:
+            # save line
+            writer.writerow(_row)
+
+    # save/append lecture data to.csv file
+    with open('courses_detailed.csv', 'a', encoding='UTF8', newline='') as f:
+        # create writer object
+        writer = csv.writer(f)
+
+        # iterate over rows
+        for _row in data_course_detailed:
             # save line
             writer.writerow(_row)
 

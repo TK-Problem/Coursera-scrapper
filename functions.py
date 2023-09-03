@@ -235,5 +235,59 @@ def parse_course_page(html, line):
             # other buttons are unimportant, can close loop
             break
 
+    # get course detailed info
+    _description = soup.find_all("div", {"class": "cds-9 css-0 cds-11 cds-grid-item cds-56 cds-79 cds-94"})
+    if _description:
+        # extract heading and description as a single string value with newline
+        _heading = _description[0].h2.text
+        _text = _description[0].find("div", {"class": "css-1m8ahwj"}).text
+        _description = _heading + "\n" + _text
+    else:
+        _description = ""
+
+    # add information about courses detailed
+    _info = soup.find_all("section", {"class": "css-3nq2m6"})
+
+    # check if information is available (element is found)
+    if _info:
+        # find basic info
+        _spec_info = _info[0].find_all("div", {"class": "cds-119 css-h1jogs cds-121"})
+
+        # generate stock info
+        _level = ""
+        _suggested_t = ""
+        _ratings_score = ""
+        if "." in _spec_info[0].text:
+            _ratings_score = _spec_info[0].text
+
+        for _ in _spec_info:
+            _text = _.text
+            if "level" in _text:
+                _level = _text
+            elif "approximately" in _text:
+                _suggested_t = _text.replace("(approximately)", "")
+
+        # get suggested completion time
+        _reviews = _info[0].find_all("p", {"class": "cds-119 css-dmxkm1 cds-121"})
+        if _reviews:
+            _reviews = _reviews[0].text
+        else:
+            _reviews = ""
+    else:
+        # because this element is not found, no information can be retried for the following variables
+        _level = ""
+        _suggested_t = ""
+        _reviews = ""
+        _ratings_score = ""
+
+    # get number on enrolled students
+    _enrolled = ""
+    for _e in soup.find_all("p", {"class": "cds-119 css-80vnnb cds-121"}):
+        if "enrolled" in _e.text:
+            _enrolled = _e.text
+
+    # add new information about course detailed
+    data_course_detailed = [line, _level, _suggested_t, _reviews, _ratings_score, _enrolled, _description]
+
     return data_course_detailed, data_week, data_lectures
 
