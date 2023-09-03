@@ -174,7 +174,8 @@ def parse_specialization_page(html, line):
             _course_review_cnt = ""
 
         # add information about courses
-        data_courses.append(line + [_course_html, _course_name, _course_no, _course_time, _course_score, _course_review_cnt])
+        data_courses.append(line + [_course_html, _course_name, _course_no,
+                                    _course_time, _course_score, _course_review_cnt])
 
     return data_spec, data_courses
 
@@ -184,69 +185,55 @@ def parse_course_page(html, line):
     Returns list of lists with detailed information about weeks content
     :param html: string, raw html code from webdriver
     :param line: list, list of strings
-    :return: list, list
+    :return: list, list, list
     """
     # convert to bs4 object
     soup = BeautifulSoup(html, "html.parser")
 
     # find all weeks with content
-    week_contents = soup.find_all("div", {"class": "_jyhj5r SyllabusWeek"})
+    week_contents = soup.find_all("div", {"data-testid": "accordion-item"})
 
     # create empty list to store data
+    data_course_detailed = list()
     data_week = list()
     data_lectures = list()
 
     # iterate over week contents
     for i, _c in enumerate(week_contents):
-        # find expected duration
-        try:
-            # some pages don\t have duration provided
-            _duration = _c.find("div", {"data-test": "duration-text-section"}).text.strip()[17:]
-        except AttributeError:
-            _duration = ''
+        # check whatever button has information about week
+        _week_summary = _c.find_all("div", {"class": "cds-119 css-mc13jp cds-121"})
+        if _week_summary:
+            # get basic week info
+            _week_name = _c.h3.text
+            _week_summary = _week_summary[0].find_all("span")
+            _week_no = _week_summary[0].text
+            if len(_week_summary) > 2:
+                _time2complete = _week_summary[2].text
+            else:
+                _time2complete = ""
 
-        # get headline and description
-        _name = _c.h3.text
-        _description = _c.p.text
+            # get overview info
+            _week_contents = _c.find_all("div", {"class": "css-15ko5n9"})
+            _overview = []
 
-        # find syllabus details
-        _syllabus = _c.find_all('div', {"class": 'ItemGroupView border-top p-t-2'})
+            # iterate over lectures
+            for _w in _week_contents:
+                # get main week info
+                _overview.append(_w.h5.text.replace("•", " "))
+                # find all lectures
+                _lectures = _w.find_all("li", {"class": "cds-119 css-1y4i2uq cds-121"})
+                # iterate over all lectures
+                for _l in _lectures:
+                    # get lecture contents
+                    _lec_contents = _l.text.replace("•", " ").replace("Preview module", "")
+                    data_lectures.append([line, _week_no, _w.h5.text.replace("•", " ").split(" ")[1], _lec_contents])
 
-        # iterate over elements
-        for _s in _syllabus:
-            # content type
-            _c_type = _s.find('strong', {'class': '_1fe1gic7 m-x-1 learning-item'}).text.split(" ")[1]
+            # add information about courses
+            data_week.append([line, _week_no, _week_name, _time2complete, " | ".join(_overview)])
 
-            # find all lectures
-            _lecture = _s.find_all("div", {"class": "_wmgtrl9 m-y-2"})
+        else:
+            # other buttons are unimportant, can close loop
+            break
 
-            # iterate over lectures contents
-            for _l in _lecture:
-                # check whatever information about duration exists
-                try:
-                    # get lecture duration
-                    _d = _l.find('span', {"class": "duration-text m-x-1s"}).text
-                except AttributeError:
-                    # return empty string
-                    _d = ""
-
-                # check whatever information text available
-                try:
-                    # lecture text
-                    _t = _l.text
-                except AttributeError:
-                    # substitute with empty string
-                    _t = ''
-
-                # append data
-                if len(_d):
-                    # add data to list
-                    data_lectures.append([line[-1], i+1, _c_type, _t[:-1*len(_d)], _d])
-                else:
-                    data_lectures.append([line[-1], i+1, _c_type, _t, _d])
-
-        # append list
-        data_week.append([line[-1], i+1, _name, _duration, _description])
-
-    return data_week, data_lectures
+    return data_course_detailed, data_week, data_lectures
 

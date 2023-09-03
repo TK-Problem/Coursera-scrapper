@@ -5,6 +5,9 @@ import time
 import csv
 
 
+# batch size
+BATCH_SIZE = 100
+
 # read data (first one needs to run all_specializations.py script to generate courses.csv file)
 with open('courses.csv', 'r', encoding='UTF8') as f:
     # reader object
@@ -16,17 +19,19 @@ with open('courses.csv', 'r', encoding='UTF8') as f:
     # convert to list so that tqdm can estimate finish time
     csv_rows = [row for row in csv_reader]
 
-# batch size
-batch_size = 100
-
 # read lines in batches of 100 (can be changed if needed)
-for i in range(0, len(csv_rows), batch_size):
+for i in range(0, len(csv_rows), BATCH_SIZE):
     # get lines
-    _rows = csv_rows[i:i+batch_size]
+    _rows = csv_rows[i:i+BATCH_SIZE]
 
     # create empty list to store all detailed course data
-    _out_data = list()
-    _out_lectures = list()
+    if i > 0:
+        data_week = list()
+        data_lectures = list()
+    else:
+        # write header rows
+        data_week = [["CourseURL", "ModuleNo", "ModuleName", "Time2Complete", "ContentsSummary"]]
+        data_lectures = [["CourseURL", "ModuleNo", "Type", "LectureName"]]
 
     # create webdriver for each batch of rows
     with sync_playwright() as p:
@@ -41,72 +46,48 @@ for i in range(0, len(csv_rows), batch_size):
         page.click("button[id=onetrust-accept-btn-handler]", delay=50)
 
         # print status message
-        print(f"Lines from {i} to {i+batch_size} are being processed.")
+        print(f"Lines from {i} to {i+BATCH_SIZE} are being processed.")
 
         # iterate over lines
         for _line in tqdm(_rows):
             # get website link (ignore first dash)
-            _url = _line[-1][1:]
+            _url = _line[1][1:]
 
             # visit page
             page.goto("https://www.coursera.org/" + _url)
-
-            # implicit wait 2 secs if show more button is present
-            for _ in range(2):
-                # explicit wait
-                time.sleep(1)
-                # break loop if button is visible
-                if page.locator("text=Show More").is_visible():
-                    # click show more button
-                    page.click("text=Show More", delay=50)
-                    break
-
-            # find all "See All" buttons
-            _buttons = page.locator('span:has-text("See All")')
-
-            # run condition while buttons can be found (exclude 2 last invisible buttons)
-            while len(_buttons.all()) > 2:
-                # click first button
-                _buttons.all()[0].click(delay=50)
-
-                # implicit wait between clicks
-                time.sleep(0.2)
-
-                # find all "See All" buttons
-                _buttons = page.locator('span:has-text("See All")')
 
             # get html
             html = page.content()
 
             # process data
-            data_week, data_lectures = parse_course_page(html, _line)
+            _data_course_detailed, _data_week, _data_lectures = parse_course_page(html, _line[1])
 
             # append data
-            _out_data += data_week
-            _out_lectures += data_lectures
+            data_week += _data_week
+            data_lectures += _data_lectures
 
-        # save/append recorded lines to .csv files (detailed week)
-        with open('weeks_basic.csv', 'a', encoding='UTF8', newline='') as f:
-            # create writer object
-            writer = csv.writer(f)
+    # save/append recorded lines to .csv files (detailed week)
+    with open('weeks.csv', 'a', encoding='UTF8', newline='') as f:
+        # create writer object
+        writer = csv.writer(f)
 
-            # iterate over rows
-            for _row in _out_data:
-                # save line
-                writer.writerow(_row)
+        # iterate over rows
+        for _row in data_week:
+            # save line
+            writer.writerow(_row)
 
-        # save/append lecture data to.csv file
-        with open('weeks_detailed.csv', 'a', encoding='UTF8', newline='') as f:
-            # create writer object
-            writer = csv.writer(f)
+    # save/append lecture data to.csv file
+    with open('weeks_detailed.csv', 'a', encoding='UTF8', newline='') as f:
+        # create writer object
+        writer = csv.writer(f)
 
-            # iterate over rows
-            for _row in _out_lectures:
-                # save line
-                writer.writerow(_row)
+        # iterate over rows
+        for _row in data_lectures:
+            # save line
+            writer.writerow(_row)
 
     # count remaining batches
-    _cnt = int(len(csv_rows) / batch_size) - i / batch_size - 1
+    _cnt = int(len(csv_rows) / BATCH_SIZE) - i / BATCH_SIZE - 1
 
     # status message how many batches are left
     print(f"{_cnt:.0f} batches left to process.")
